@@ -132,9 +132,9 @@ export const mixingStyles = [
 ] as const;
 
 export const aiPlatforms = [
-  { id: "suno", label: "Suno", maxChars: 1000 },
-  { id: "udio", label: "Udio", maxChars: 1000 },
-  { id: "generic", label: "Generic (Other AIs)", maxChars: 2000 },
+  { id: "suno", label: "Suno", maxChars: 200, description: "Concise tags, comma-separated" },
+  { id: "udio", label: "Udio", maxChars: 1000, description: "Detailed descriptive sentences" },
+  { id: "generic", label: "Generic (Other AIs)", maxChars: 2000, description: "Flexible format" },
 ] as const;
 
 export const eras = [

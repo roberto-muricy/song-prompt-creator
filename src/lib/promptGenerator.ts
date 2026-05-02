@@ -21,6 +21,122 @@ export interface PromptFormData {
 }
 
 export function generatePrompt(data: PromptFormData): string {
+  switch (data.platform) {
+    case "suno":
+      return generateSunoPrompt(data);
+    case "udio":
+      return generateUdioPrompt(data);
+    default:
+      return generateGenericPrompt(data);
+  }
+}
+
+function generateSunoPrompt(data: PromptFormData): string {
+  const tags: string[] = [];
+
+  if (data.genre) {
+    tags.push(data.subGenre ? `${data.subGenre}` : data.genre);
+  }
+  if (data.era) tags.push(data.era);
+  if (data.mood) tags.push(data.mood);
+  if (data.tempo) {
+    const bpmMatch = data.tempo.match(/(\d+-\d+)\s*BPM/i);
+    tags.push(bpmMatch ? `${bpmMatch[1]} BPM` : data.tempo);
+  }
+
+  if (data.leadInstrument) tags.push(data.leadInstrument);
+  if (data.percussion && data.percussion !== "No Percussion") tags.push(data.percussion);
+  if (data.bass && data.bass !== "No Bass") tags.push(data.bass);
+  if (data.accompanyingInstrument) tags.push(data.accompanyingInstrument);
+
+  if (data.vocalType) {
+    if (data.vocalType === "Instrumental (No Vocals)") {
+      tags.push("Instrumental");
+    } else {
+      tags.push(data.vocalType);
+      if (data.vocalTimbre) tags.push(`${data.vocalTimbre} voice`);
+    }
+  }
+
+  if (data.harmony) tags.push(data.harmony);
+  if (data.mixingStyle) tags.push(`${data.mixingStyle} mix`);
+  if (data.energy) {
+    const energyLabel = data.energy.split(",")[0].trim();
+    tags.push(energyLabel);
+  }
+
+  if (data.customNotes) tags.push(data.customNotes.trim());
+
+  return tags.join(", ");
+}
+
+function generateUdioPrompt(data: PromptFormData): string {
+  const sections: string[] = [];
+
+  // Genre & style sentence
+  if (data.genre) {
+    let style = data.subGenre ? `${data.subGenre} ${data.genre.toLowerCase()}` : data.genre.toLowerCase();
+    if (data.era) style = `${data.era}-era ${style}`;
+    const article = /^[aeiou]/i.test(style) ? "An" : "A";
+    let sentence = `${article} ${style} track`;
+    if (data.mood) {
+      const moodArticle = /^[aeiou]/i.test(data.mood) ? "an" : "a";
+      sentence += ` with ${moodArticle} ${data.mood.toLowerCase()} mood`;
+    }
+    if (data.energy) {
+      const energyDesc = data.energy.split(",").slice(1).join(",").trim();
+      if (energyDesc) sentence += `, ${energyDesc}`;
+    }
+    sections.push(sentence + ".");
+  }
+
+  // Tempo
+  if (data.tempo) {
+    sections.push(`Tempo: ${data.tempo}.`);
+  }
+
+  // Instruments
+  const instParts: string[] = [];
+  if (data.leadInstrument) instParts.push(`${data.leadInstrument} as the lead instrument`);
+  if (data.accompanyingInstrument) instParts.push(`${data.accompanyingInstrument} providing accompaniment`);
+  if (data.bass && data.bass !== "No Bass") instParts.push(`${data.bass.toLowerCase()} bass`);
+  if (data.percussion && data.percussion !== "No Percussion") instParts.push(`${data.percussion.toLowerCase()} on drums`);
+  if (instParts.length > 0) {
+    sections.push(`Instrumentation features ${instParts.join(", ")}.`);
+  }
+
+  // Harmony & structure
+  if (data.harmony || data.structure) {
+    const hsParts: string[] = [];
+    if (data.harmony) hsParts.push(`${data.harmony} harmony`);
+    if (data.structure) hsParts.push(`following a ${data.structure}`);
+    sections.push(`Built on ${hsParts.join(", ")}.`);
+  }
+
+  // Vocals
+  if (data.vocalType) {
+    if (data.vocalType === "Instrumental (No Vocals)") {
+      sections.push("Purely instrumental, no vocals.");
+    } else {
+      const vocalDesc: string[] = [data.vocalType.toLowerCase()];
+      if (data.vocalStyle) vocalDesc.push(`with a ${data.vocalStyle.toLowerCase()} delivery`);
+      if (data.vocalTimbre) vocalDesc.push(`${data.vocalTimbre.toLowerCase()} timbre`);
+      if (data.vocalEffects) vocalDesc.push(`processed with ${data.vocalEffects.toLowerCase()}`);
+      sections.push(`Vocals: ${vocalDesc.join(", ")}.`);
+    }
+  }
+
+  // Mix
+  if (data.mixingStyle) {
+    sections.push(`Production style: ${data.mixingStyle.toLowerCase()} mix.`);
+  }
+
+  if (data.customNotes) sections.push(data.customNotes.trim());
+
+  return sections.join(" ");
+}
+
+function generateGenericPrompt(data: PromptFormData): string {
   const parts: string[] = [];
 
   if (data.genre) {
@@ -76,6 +192,10 @@ export function optimizePrompt(prompt: string, maxChars: number): string {
     [/\bvery\b/gi, ""],
     [/\btempo,?\s*/gi, ""],
     [/\b(\d+)-(\d+) BPM/gi, "$1-$2bpm"],
+    [/\bInstrumentation features\b/gi, ""],
+    [/\bProduction style:\b/gi, ""],
+    [/\bproviding accompaniment\b/gi, ""],
+    [/\bas the lead instrument\b/gi, "lead"],
     [/\s{2,}/g, " "],
     [/, ,/g, ","],
     [/,\s*,/g, ","],
