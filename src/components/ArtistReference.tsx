@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { User, X } from "lucide-react";
 import { searchArtists, type ArtistProfile } from "@/data/artists";
 import { aiPlatforms } from "@/data/options";
 import { optimizePrompt } from "@/lib/promptGenerator";
@@ -71,7 +72,7 @@ export default function ArtistReference() {
 
       <div className="border border-zinc-800 rounded-xl bg-zinc-900/50 p-5">
         <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-3 mb-4">
-          <span className="text-xl">🎤</span>
+          <User size={20} className="text-zinc-400" />
           Artist Reference
         </h2>
         <p className="text-sm text-zinc-400 mb-4">
@@ -120,7 +121,7 @@ export default function ArtistReference() {
                 onClick={() => { setSelected(null); setQuery(""); }}
                 className="text-zinc-500 hover:text-zinc-300 text-sm"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
           </div>

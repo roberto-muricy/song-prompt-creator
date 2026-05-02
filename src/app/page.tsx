@@ -10,6 +10,7 @@ import {
   harmonyTypes, structures, mixingStyles, aiPlatforms, eras, energyLevels,
 } from "@/data/options";
 import { generatePrompt, optimizePrompt, type PromptFormData } from "@/lib/promptGenerator";
+import { Music2, Piano, Mic, SlidersHorizontal } from "lucide-react";
 
 type Mode = "form" | "artist";
 
@@ -133,7 +134,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-4">
-              <Section title="Genre & Style" icon="🎵">
+              <Section title="Genre & Style" icon={<Music2 size={20} />}>
                 <Select label="Genre" value={form.genre} onChange={(v) => update("genre", v)} options={[...genres]} />
                 <Select
                   label="Sub-genre"
@@ -148,7 +149,7 @@ export default function Home() {
                 <Select label="Tempo" value={form.tempo} onChange={(v) => update("tempo", v)} options={[...tempos]} />
               </Section>
 
-              <Section title="Instruments & Production" icon="🎸">
+              <Section title="Instruments & Production" icon={<Piano size={20} />}>
                 <Select label="Percussion" value={form.percussion} onChange={(v) => update("percussion", v)} options={[...instruments.percussion]} />
                 <Select label="Bass" value={form.bass} onChange={(v) => update("bass", v)} options={[...instruments.bass]} />
                 <Select label="Lead Instrument" value={form.leadInstrument} onChange={(v) => update("leadInstrument", v)} options={[...instruments.lead]} />
@@ -157,14 +158,14 @@ export default function Home() {
                 <Select label="Structure" value={form.structure} onChange={(v) => update("structure", v)} options={[...structures]} />
               </Section>
 
-              <Section title="Vocals" icon="🎤">
+              <Section title="Vocals" icon={<Mic size={20} />}>
                 <Select label="Vocal Type" value={form.vocalType} onChange={(v) => update("vocalType", v)} options={[...vocalsOptions.type]} />
                 <Select label="Vocal Style" value={form.vocalStyle} onChange={(v) => update("vocalStyle", v)} options={[...vocalsOptions.style]} />
                 <Select label="Vocal Timbre" value={form.vocalTimbre} onChange={(v) => update("vocalTimbre", v)} options={[...vocalsOptions.timbre]} />
                 <Select label="Vocal Effects" value={form.vocalEffects} onChange={(v) => update("vocalEffects", v)} options={[...vocalsOptions.effects]} />
               </Section>
 
-              <Section title="Mixing & Production" icon="🎛️">
+              <Section title="Mixing & Production" icon={<SlidersHorizontal size={20} />}>
                 <Select label="Mixing Style" value={form.mixingStyle} onChange={(v) => update("mixingStyle", v)} options={[...mixingStyles]} />
                 <div className="sm:col-span-2 lg:col-span-3">
                   <label className="text-sm font-medium text-zinc-300 block mb-1.5">Custom Notes</label>

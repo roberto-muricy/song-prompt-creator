@@ -4,7 +4,8 @@ export const genres = [
   "Ambient", "Lo-fi", "Cinematic", "Afrobeats", "K-Pop", "Indie",
   "Alternative", "Trap", "Drill", "House", "Techno", "Drum and Bass",
   "Dubstep", "Trance", "Disco", "Gospel", "Bossa Nova", "Samba", "MPB",
-  "Sertanejo", "Forró", "Pagode", "Axé"
+  "Sertanejo", "Forró", "Pagode", "Axé", "Ska", "Indie Rock",
+  "Trip Hop", "Brit Pop", "Dream Pop"
 ] as const;
 
 export const subGenres: Record<string, string[]> = {
@@ -33,6 +34,11 @@ export const subGenres: Record<string, string[]> = {
   "Bossa Nova": ["Traditional Bossa", "Jazz Bossa", "Modern Bossa"],
   "MPB": ["Tropicália", "MPB Moderno", "MPB Clássico"],
   "Sertanejo": ["Sertanejo Universitário", "Sertanejo Raiz", "Sertanejo Romântico"],
+  "Ska": ["Traditional Ska", "2 Tone Ska", "Ska Punk", "Ska Jazz", "Rocksteady"],
+  "Indie Rock": ["Garage Rock Revival", "Math Rock", "Noise Rock", "Lo-fi Indie Rock", "Post-Punk Revival", "Emo"],
+  "Trip Hop": ["Downtempo", "Abstract Hip Hop", "Dark Trip Hop", "Cinematic Trip Hop"],
+  "Brit Pop": ["Classic Brit Pop", "Madchester", "Shoegazing Brit Pop", "New Wave of Brit Pop"],
+  "Dream Pop": ["Shoegaze", "Ethereal Wave", "Ambient Pop", "Chillwave", "Slowcore"],
 };
 
 export const moods = [

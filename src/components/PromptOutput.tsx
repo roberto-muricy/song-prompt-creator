@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 
 interface PromptOutputProps {
   prompt: string;
@@ -42,7 +43,7 @@ export default function PromptOutput({ prompt, maxChars, onOptimize, onUndo, can
     <div className="border border-zinc-800 rounded-xl bg-zinc-900/50 overflow-hidden">
       <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
         <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-          <span className="text-xl">✨</span>
+          <Sparkles size={18} className="text-purple-400" />
           Generated Prompt
         </h2>
         <div className="flex items-center gap-2">

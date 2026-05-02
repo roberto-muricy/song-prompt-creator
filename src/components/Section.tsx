@@ -4,7 +4,7 @@ import { useState } from "react";
 
 interface SectionProps {
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
   defaultOpen?: boolean;
 }
@@ -19,7 +19,7 @@ export default function Section({ title, icon, children, defaultOpen = true }: S
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-zinc-800/50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="text-xl">{icon}</span>
+          <span className="text-zinc-400">{icon}</span>
           <h2 className="text-base font-semibold text-zinc-100">{title}</h2>
         </div>
         <svg
