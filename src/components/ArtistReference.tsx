@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { User, X } from "lucide-react";
-import { searchArtists, type ArtistProfile } from "@/data/artists";
+import { User, X, Loader2 } from "lucide-react";
+import { searchArtists, getArtistByName, type ArtistProfile } from "@/data/artists";
 import { aiPlatforms } from "@/data/options";
 import { optimizePrompt } from "@/lib/promptGenerator";
+import { requestAIPrompt } from "@/lib/aiClient";
 import PromptOutput from "./PromptOutput";
+import AIToggle, { StatusNote } from "./AIToggle";
 
 export default function ArtistReference() {
   const [query, setQuery] = useState("");
@@ -14,10 +16,18 @@ export default function ArtistReference() {
   const [prompt, setPrompt] = useState("");
   const [history, setHistory] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [useAI, setUseAI] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
 
   const platformData = aiPlatforms.find((p) => p.id === platform) || aiPlatforms[0];
   const results = useMemo(() => searchArtists(query), [query]);
   const showDropdown = showResults && query.length > 0 && results.length > 0 && !selected;
+
+  // With AI on, any typed name works; without it, only artists from the local database.
+  const artistName = selected?.name ?? query.trim();
+  const localMatch = selected ?? getArtistByName(query.trim()) ?? null;
+  const canGenerate = useAI ? artistName.length > 0 : localMatch !== null;
 
   const handleSelect = (artist: ArtistProfile) => {
     setSelected(artist);
@@ -25,9 +35,31 @@ export default function ArtistReference() {
     setShowResults(false);
   };
 
-  const handleGenerate = () => {
-    if (!selected) return;
-    const result = selected.prompt;
+  const handleGenerate = async () => {
+    if (!canGenerate) return;
+    setNote(null);
+    let result: string | null = localMatch?.prompt ?? null;
+
+    if (useAI) {
+      setLoading(true);
+      const ai = await requestAIPrompt({
+        mode: "artist",
+        platform,
+        artist: artistName,
+        hint: localMatch?.prompt,
+      });
+      setLoading(false);
+      if (ai.ok) {
+        result = ai.prompt;
+      } else if (result) {
+        setNote(`${ai.message} Showing the saved profile instead.`);
+      } else {
+        setNote(ai.message);
+        return;
+      }
+    }
+
+    if (!result) return;
     if (prompt) setHistory((prev) => [...prev, prompt]);
     setPrompt(result);
   };
@@ -50,6 +82,7 @@ export default function ArtistReference() {
     setQuery("");
     setSelected(null);
     setPrompt("");
+    setNote(null);
   };
 
   return (
@@ -76,7 +109,9 @@ export default function ArtistReference() {
           Artist Reference
         </h2>
         <p className="text-sm text-zinc-400 mb-4">
-          Type an artist name to generate a prompt that captures their style — without mentioning the artist directly.
+          {useAI
+            ? "Type any artist name. The AI describes their sound without mentioning the artist."
+            : "Pick an artist from the list to use their saved style profile."}
         </p>
 
         <div className="relative">
@@ -88,8 +123,12 @@ export default function ArtistReference() {
               setShowResults(true);
               if (selected) setSelected(null);
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleGenerate();
+            }}
             onFocus={() => setShowResults(true)}
             onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            maxLength={100}
             placeholder="Search artist... (e.g. Daft Punk, Billie Eilish, Tom Jobim)"
             className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors hover:border-zinc-600"
           />
@@ -128,13 +167,18 @@ export default function ArtistReference() {
         )}
       </div>
 
-      <div className="flex gap-3 justify-center pt-2">
+      <div className="flex justify-center pt-2">
+        <AIToggle enabled={useAI} onChange={setUseAI} />
+      </div>
+
+      <div className="flex gap-3 justify-center">
         <button
           onClick={handleGenerate}
-          disabled={!selected}
-          className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 font-semibold text-sm transition-all hover:scale-105 shadow-lg shadow-purple-900/30 disabled:shadow-none disabled:hover:scale-100"
+          disabled={!canGenerate || loading}
+          className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-zinc-700 disabled:to-zinc-700 disabled:text-zinc-500 font-semibold text-sm transition-all hover:scale-105 shadow-lg shadow-purple-900/30 disabled:shadow-none disabled:hover:scale-100"
         >
-          Generate Prompt
+          {loading && <Loader2 size={16} className="animate-spin" />}
+          {loading ? "Generating..." : "Generate Prompt"}
         </button>
         <button
           onClick={handleClear}
@@ -143,6 +187,8 @@ export default function ArtistReference() {
           Clear
         </button>
       </div>
+
+      <StatusNote note={note} />
 
       <PromptOutput
         prompt={prompt}

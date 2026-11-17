@@ -10,7 +10,9 @@ import {
   harmonyTypes, structures, mixingStyles, aiPlatforms, eras, energyLevels,
 } from "@/data/options";
 import { generatePrompt, optimizePrompt, type PromptFormData } from "@/lib/promptGenerator";
-import { Music2, Piano, Mic, SlidersHorizontal } from "lucide-react";
+import { requestAIPrompt } from "@/lib/aiClient";
+import AIToggle, { StatusNote } from "@/components/AIToggle";
+import { Music2, Piano, Mic, SlidersHorizontal, Loader2 } from "lucide-react";
 
 type Mode = "form" | "artist";
 
@@ -41,6 +43,9 @@ export default function Home() {
   const [form, setForm] = useState<PromptFormData>(initialForm);
   const [prompt, setPrompt] = useState("");
   const [history, setHistory] = useState<string[]>([]);
+  const [useAI, setUseAI] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
 
   const platform = aiPlatforms.find((p) => p.id === form.platform) || aiPlatforms[0];
   const availableSubGenres = form.genre && subGenres[form.genre] ? subGenres[form.genre] : [];
@@ -53,8 +58,21 @@ export default function Home() {
     });
   }, []);
 
-  const handleGenerate = () => {
-    const result = generatePrompt(form);
+  const handleGenerate = async () => {
+    setNote(null);
+    let result = generatePrompt(form);
+    if (!result) {
+      setNote("Select at least one option.");
+      return;
+    }
+    if (useAI) {
+      setLoading(true);
+      const { platform: platformId, ...fields } = form;
+      const ai = await requestAIPrompt({ mode: "form", platform: platformId, form: fields });
+      setLoading(false);
+      if (ai.ok) result = ai.prompt;
+      else setNote(`${ai.message} Showing the local result instead.`);
+    }
     if (prompt) setHistory((prev) => [...prev, prompt]);
     setPrompt(result);
   };
@@ -179,12 +197,18 @@ export default function Home() {
                 </div>
               </Section>
 
-              <div className="flex gap-3 justify-center pt-2">
+              <div className="flex justify-center pt-2">
+                <AIToggle enabled={useAI} onChange={setUseAI} />
+              </div>
+
+              <div className="flex gap-3 justify-center">
                 <button
                   onClick={handleGenerate}
-                  className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 font-semibold text-sm transition-all hover:scale-105 shadow-lg shadow-purple-900/30"
+                  disabled={loading}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-60 font-semibold text-sm transition-all hover:scale-105 disabled:hover:scale-100 shadow-lg shadow-purple-900/30"
                 >
-                  Generate Prompt
+                  {loading && <Loader2 size={16} className="animate-spin" />}
+                  {loading ? "Generating..." : "Generate Prompt"}
                 </button>
                 <button
                   onClick={handleClear}
@@ -193,6 +217,8 @@ export default function Home() {
                   Clear Form
                 </button>
               </div>
+
+              <StatusNote note={note} />
 
               <PromptOutput
                 prompt={prompt}
