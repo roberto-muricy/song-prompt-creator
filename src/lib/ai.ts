@@ -71,14 +71,31 @@ export class AIUnavailableError extends Error {}
 export class AIRefusalError extends Error {}
 export class UnknownArtistError extends Error {}
 
+// The SDK resolves credentials on its own: ANTHROPIC_API_KEY (used on Vercel),
+// or the `ant auth login` profile (convenient on a developer machine).
 let client: Anthropic | null = null;
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) throw new AIUnavailableError("ANTHROPIC_API_KEY not set");
   client ??= new Anthropic();
   return client;
 }
 
+function isMissingCredentials(err: unknown) {
+  return (
+    err instanceof Anthropic.AuthenticationError ||
+    (err instanceof Error && err.message.startsWith("Could not resolve authentication"))
+  );
+}
+
 async function complete(platform: PlatformId, userContent: string): Promise<string> {
+  try {
+    return await callModel(platform, userContent);
+  } catch (err) {
+    if (isMissingCredentials(err)) throw new AIUnavailableError("No Anthropic credentials");
+    throw err;
+  }
+}
+
+async function callModel(platform: PlatformId, userContent: string): Promise<string> {
   const response = await getClient().beta.messages.create({
     model: "claude-opus-5-5",
     max_tokens: 4000,
